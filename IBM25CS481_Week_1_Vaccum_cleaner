@@ -1,115 +1,39 @@
-{
-  "nbformat": 4,
-  "nbformat_minor": 0,
-  "metadata": {
-    "colab": {
-      "provenance": [],
-      "authorship_tag": "ABX9TyNJStWdV/3Fq7Pz+S/oYKbJ",
-      "include_colab_link": true
-    },
-    "kernelspec": {
-      "name": "python3",
-      "display_name": "Python 3"
-    },
-    "language_info": {
-      "name": "python"
+import random
+
+def vacuum_cleaner_agent():
+    # Step 1: Initialize environment with random dirty/clean status
+    rooms = {
+        'A': random.choice(['Dirty', 'Clean']),
+        'B': random.choice(['Dirty', 'Clean'])
     }
-  },
-  "cells": [
-    {
-      "cell_type": "markdown",
-      "metadata": {
-        "id": "view-in-github",
-        "colab_type": "text"
-      },
-      "source": [
-        "<a href=\"https://colab.research.google.com/github/Hussain-patel/college/blob/master/IBM25CS481_Week_1_Vaccum_cleaner\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
-      ]
-    },
-    {
-      "cell_type": "code",
-      "execution_count": 8,
-      "metadata": {
-        "colab": {
-          "base_uri": "https://localhost:8080/"
-        },
-        "id": "FRn-WTQOriET",
-        "outputId": "57c9dda3-9471-4e2e-aab4-be09f898fbaf"
-      },
-      "outputs": [
-        {
-          "output_type": "stream",
-          "name": "stdout",
-          "text": [
-            "\n",
-            "Step 1\n",
-            "Environment: {'A': 'Dirty', 'B': 'Dirty'}\n",
-            "Room A is dirty → Cleaning...\n",
-            "\n",
-            "Step 2\n",
-            "Environment: {'A': 'Clean', 'B': 'Dirty'}\n",
-            "Room A is clean → Moving to Room B\n",
-            "\n",
-            "Step 3\n",
-            "Environment: {'A': 'Clean', 'B': 'Dirty'}\n",
-            "Room B is dirty → Cleaning...\n",
-            "\n",
-            "Step 4\n",
-            "Environment: {'A': 'Clean', 'B': 'Clean'}\n",
-            "Room B is clean → Moving to Room A\n",
-            "\n",
-            "Step 5\n",
-            "Environment: {'A': 'Clean', 'B': 'Clean'}\n",
-            "Room B is clean → Moving to Room A\n",
-            "\n",
-            "Step 6\n",
-            "Environment: {'A': 'Clean', 'B': 'Clean'}\n",
-            "Room B is clean → Moving to Room A\n",
-            "\n",
-            "Final Environment: {'A': 'Clean', 'B': 'Clean'}\n"
-          ]
-        }
-      ],
-      "source": [
-        "class VacuumCleanerAgent:\n",
-        "    def __init__(self):\n",
-        "        self.location = \"A\"\n",
-        "\n",
-        "    def perceive(self, environment):\n",
-        "        return environment[self.location]\n",
-        "\n",
-        "    def act(self, environment):\n",
-        "        status = self.perceive(environment)\n",
-        "\n",
-        "        if status == \"Dirty\":\n",
-        "            print(f\"Room {self.location} is dirty → Cleaning...\")\n",
-        "            environment[self.location] = \"Clean\"\n",
-        "\n",
-        "        elif self.location == \"A\":\n",
-        "            print(\"Room A is clean → Moving to Room B\")\n",
-        "            self.location = \"B\"\n",
-        "\n",
-        "        else:\n",
-        "            print(\"Room B is clean → Moving to Room A\")\n",
-        "\n",
-        "\n",
-        "# Environment\n",
-        "environment = {\n",
-        "    \"A\": \"Dirty\",\n",
-        "    \"B\": \"Dirty\"\n",
-        "}\n",
-        "\n",
-        "# Create the agent\n",
-        "agent = VacuumCleanerAgent()\n",
-        "\n",
-        "# Run the agent\n",
-        "for step in range(6):\n",
-        "    print(f\"\\nStep {step + 1}\")\n",
-        "    print(\"Environment:\", environment)\n",
-        "    agent.act(environment)\n",
-        "\n",
-        "print(\"\\nFinal Environment:\", environment)\n"
-      ]
-    }
-  ]
-}
+
+    print("Initial Environment State:")
+    print(rooms)
+
+    # Step 2: Agent starts in room A
+    current_room = 'A'
+    cost = 0  # counts number of actions (moves + cleans)
+
+    print("\nAgent starts at room:", current_room)
+
+    # Step 3: Run until both rooms are clean
+    while rooms['A'] == 'Dirty' or rooms['B'] == 'Dirty':
+        print(f"\nAgent is in room {current_room}. Status: {rooms[current_room]}")
+
+        if rooms[current_room] == 'Dirty':
+            print(f"Room {current_room} is dirty. Cleaning...")
+            rooms[current_room] = 'Clean'
+            cost += 1
+        else:
+            print(f"Room {current_room} is already clean. Moving to the other room.")
+            current_room = 'B' if current_room == 'A' else 'A'
+            cost += 1
+
+        print("Current Environment State:", rooms)
+
+    print("\nBoth rooms are clean!")
+    print("Final Environment State:", rooms)
+    print("Total cost (actions taken):", cost)
+
+if __name__ == "__main__":
+    vacuum_cleaner_agent()
