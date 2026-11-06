@@ -1,214 +1,150 @@
-{
-  "nbformat": 4,
-  "nbformat_minor": 0,
-  "metadata": {
-    "colab": {
-      "provenance": [],
-      "authorship_tag": "ABX9TyPsJRLiLfEdFSzpuzDf89wA",
-      "include_colab_link": true
-    },
-    "kernelspec": {
-      "name": "python3",
-      "display_name": "Python 3"
-    },
-    "language_info": {
-      "name": "python"
-    }
-  },
-  "cells": [
-    {
-      "cell_type": "markdown",
-      "metadata": {
-        "id": "view-in-github",
-        "colab_type": "text"
-      },
-      "source": [
-        "<a href=\"https://colab.research.google.com/github/Hussain-patel/college/blob/master/IBM25CS481_Week_4_Hill_Climbing\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
-      ]
-    },
-    {
-      "cell_type": "code",
-      "execution_count": 3,
-      "metadata": {
-        "colab": {
-          "base_uri": "https://localhost:8080/"
-        },
-        "id": "Lv1n5RMT_29A",
-        "outputId": "c38cd764-e81d-4d8e-c307-0c361aa56a6c"
-      },
-      "outputs": [
-        {
-          "output_type": "stream",
-          "name": "stdout",
-          "text": [
-            "Enter 9 numbers: 0 1 2 3 4 5 6 7 8 \n",
-            "\n",
-            "Initial State:\n",
-            "  1 2\n",
-            "3 4 5\n",
-            "6 7 8\n",
-            "---------\n",
-            "Target Goal State:\n",
-            "1 2 3\n",
-            "8   4\n",
-            "7 6 5\n",
-            "---------\n",
-            "This puzzle configuration is UNSOLVABLE.\n"
-          ]
-        }
-      ],
-      "source": [
-        "GOAL = (\n",
-        "    1, 2, 3,\n",
-        "    8, 0, 4,\n",
-        "    7, 6, 5\n",
-        ")\n",
-        "\n",
-        "POS = {\n",
-        "    n: divmod(i, 3)\n",
-        "    for i, n in enumerate(GOAL)\n",
-        "    if n != 0\n",
-        "}\n",
-        "\n",
-        "\n",
-        "def manhattan(state):\n",
-        "    return sum(\n",
-        "        abs(i // 3 - POS[n][0]) +\n",
-        "        abs(i % 3 - POS[n][1])\n",
-        "        for i, n in enumerate(state)\n",
-        "        if n != 0\n",
-        "    )\n",
-        "\n",
-        "\n",
-        "def neighbors(state):\n",
-        "    zero = state.index(0)\n",
-        "    row, col = divmod(zero, 3)\n",
-        "\n",
-        "    moves = [\n",
-        "        (-1, 0),\n",
-        "        (1, 0),\n",
-        "        (0, -1),\n",
-        "        (0, 1)\n",
-        "    ]\n",
-        "\n",
-        "    for dr, dc in moves:\n",
-        "        new_row = row + dr\n",
-        "        new_col = col + dc\n",
-        "\n",
-        "        if 0 <= new_row < 3 and 0 <= new_col < 3:\n",
-        "            new_state = list(state)\n",
-        "            new_zero = new_row * 3 + new_col\n",
-        "\n",
-        "            new_state[zero], new_state[new_zero] = (\n",
-        "                new_state[new_zero],\n",
-        "                new_state[zero]\n",
-        "            )\n",
-        "\n",
-        "            yield tuple(new_state)\n",
-        "\n",
-        "\n",
-        "def inversions(state):\n",
-        "    tiles = [x for x in state if x != 0]\n",
-        "\n",
-        "    return sum(\n",
-        "        tiles[i] > tiles[j]\n",
-        "        for i in range(len(tiles))\n",
-        "        for j in range(i + 1, len(tiles))\n",
-        "    )\n",
-        "\n",
-        "\n",
-        "def solvable(state):\n",
-        "    return (\n",
-        "        inversions(state) % 2\n",
-        "        == inversions(GOAL) % 2\n",
-        "    )\n",
-        "\n",
-        "\n",
-        "def hill_climbing(start):\n",
-        "    \"\"\"\n",
-        "    Steepest-ascent hill climbing.\n",
-        "    At each step, look at all neighbors and move to the one with the\n",
-        "    lowest Manhattan distance. Stop when no neighbor is strictly better\n",
-        "    (goal reached, or stuck at a local minimum / plateau).\n",
-        "    Returns (path, reached_goal).\n",
-        "    \"\"\"\n",
-        "    current = start\n",
-        "    path = [current]\n",
-        "\n",
-        "    while current != GOAL:\n",
-        "        current_h = manhattan(current)\n",
-        "\n",
-        "        best = min(neighbors(current), key=manhattan)\n",
-        "        best_h = manhattan(best)\n",
-        "\n",
-        "        # No improvement -> local optimum or plateau\n",
-        "        if best_h >= current_h:\n",
-        "            return path, False\n",
-        "\n",
-        "        current = best\n",
-        "        path.append(current)\n",
-        "\n",
-        "    return path, True\n",
-        "\n",
-        "\n",
-        "def print_board(state):\n",
-        "    for i in range(0, 9, 3):\n",
-        "        print(\n",
-        "            \" \".join(\n",
-        "                str(x) if x != 0 else \" \"\n",
-        "                for x in state[i:i + 3]\n",
-        "            )\n",
-        "        )\n",
-        "\n",
-        "    print(\"-\" * 9)\n",
-        "\n",
-        "\n",
-        "while True:\n",
-        "    try:\n",
-        "        state = tuple(\n",
-        "            map(int, input(\"Enter 9 numbers: \").split())\n",
-        "        )\n",
-        "\n",
-        "        if len(state) == 9 and sorted(state) == list(range(9)):\n",
-        "            break\n",
-        "\n",
-        "        print(\"Error: Enter numbers 0 to 8 exactly once.\")\n",
-        "\n",
-        "    except ValueError:\n",
-        "        print(\"Error: Enter integers only.\")\n",
-        "\n",
-        "\n",
-        "print(\"\\nInitial State:\")\n",
-        "print_board(state)\n",
-        "\n",
-        "print(\"Target Goal State:\")\n",
-        "print_board(GOAL)\n",
-        "\n",
-        "if not solvable(state):\n",
-        "    print(\"This puzzle configuration is UNSOLVABLE.\")\n",
-        "\n",
-        "else:\n",
-        "    print(\n",
-        "        \"Solvability check passed! Solving using Hill Climbing \"\n",
-        "        \"(Manhattan Distance)...\\n\"\n",
-        "    )\n",
-        "\n",
-        "    solution, reached = hill_climbing(state)\n",
-        "\n",
-        "    if reached:\n",
-        "        print(\n",
-        "            f\"Goal reached in {len(solution) - 1} steps!\\n\"\n",
-        "        )\n",
-        "    else:\n",
-        "        print(\n",
-        "            f\"Stuck at a local optimum after {len(solution) - 1} steps \"\n",
-        "            f\"(h = {manhattan(solution[-1])}). Hill climbing failed.\\n\"\n",
-        "        )\n",
-        "\n",
-        "    for step, s in enumerate(solution):\n",
-        "        print(f\"Step {step}:\")\n",
-        "        print_board(s)\n"
-      ]
-    }
-  ]
+GOAL = (
+    1, 2, 3,
+    8, 0, 4,
+    7, 6, 5
+)
+
+POS = {
+    n: divmod(i, 3)
+    for i, n in enumerate(GOAL)
+    if n != 0
 }
+
+
+def manhattan(state):
+    return sum(
+        abs(i // 3 - POS[n][0]) +
+        abs(i % 3 - POS[n][1])
+        for i, n in enumerate(state)
+        if n != 0
+    )
+
+
+def neighbors(state):
+    zero = state.index(0)
+    row, col = divmod(zero, 3)
+
+    moves = [
+        (-1, 0),
+        (1, 0),
+        (0, -1),
+        (0, 1)
+    ]
+
+    for dr, dc in moves:
+        new_row = row + dr
+        new_col = col + dc
+
+        if 0 <= new_row < 3 and 0 <= new_col < 3:
+            new_state = list(state)
+            new_zero = new_row * 3 + new_col
+
+            new_state[zero], new_state[new_zero] = (
+                new_state[new_zero],
+                new_state[zero]
+            )
+
+            yield tuple(new_state)
+
+
+def inversions(state):
+    tiles = [x for x in state if x != 0]
+
+    return sum(
+        tiles[i] > tiles[j]
+        for i in range(len(tiles))
+        for j in range(i + 1, len(tiles))
+    )
+
+
+def solvable(state):
+    return (
+        inversions(state) % 2
+        == inversions(GOAL) % 2
+    )
+
+
+def hill_climbing(start):
+    """
+    Steepest-ascent hill climbing.
+    At each step, look at all neighbors and move to the one with the
+    lowest Manhattan distance. Stop when no neighbor is strictly better
+    (goal reached, or stuck at a local minimum / plateau).
+    Returns (path, reached_goal).
+    """
+    current = start
+    path = [current]
+
+    while current != GOAL:
+        current_h = manhattan(current)
+
+        best = min(neighbors(current), key=manhattan)
+        best_h = manhattan(best)
+
+        # No improvement -> local optimum or plateau
+        if best_h >= current_h:
+            return path, False
+
+        current = best
+        path.append(current)
+
+    return path, True
+
+
+def print_board(state):
+    for i in range(0, 9, 3):
+        print(
+            " ".join(
+                str(x) if x != 0 else " "
+                for x in state[i:i + 3]
+            )
+        )
+
+    print("-" * 9)
+
+
+while True:
+    try:
+        state = tuple(
+            map(int, input("Enter 9 numbers: ").split())
+        )
+
+        if len(state) == 9 and sorted(state) == list(range(9)):
+            break
+
+        print("Error: Enter numbers 0 to 8 exactly once.")
+
+    except ValueError:
+        print("Error: Enter integers only.")
+
+
+print("\nInitial State:")
+print_board(state)
+
+print("Target Goal State:")
+print_board(GOAL)
+
+if not solvable(state):
+    print("This puzzle configuration is UNSOLVABLE.")
+
+else:
+    print(
+        "Solvability check passed! Solving using Hill Climbing "
+        "(Manhattan Distance)...\n"
+    )
+
+    solution, reached = hill_climbing(state)
+
+    if reached:
+        print(
+            f"Goal reached in {len(solution) - 1} steps!\n"
+        )
+    else:
+        print(
+            f"Stuck at a local optimum after {len(solution) - 1} steps "
+            f"(h = {manhattan(solution[-1])}). Hill climbing failed.\n"
+        )
+
+    for step, s in enumerate(solution):
+        print(f"Step {step}:")
+        print_board(s)
