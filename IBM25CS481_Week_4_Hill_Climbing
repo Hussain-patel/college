@@ -1,150 +1,65 @@
-GOAL = (
-    1, 2, 3,
-    8, 0, 4,
-    7, 6, 5
-)
-
-POS = {
-    n: divmod(i, 3)
-    for i, n in enumerate(GOAL)
-    if n != 0
-}
 
 
-def manhattan(state):
-    return sum(
-        abs(i // 3 - POS[n][0]) +
-        abs(i % 3 - POS[n][1])
-        for i, n in enumerate(state)
-        if n != 0
-    )
+import itertools
 
+def calculate_cost(state):
+    conflicts = 0
+    n = len(state)
+    for i in range(n):
+        for j in range(i + 1, n):
+            if abs(i - j) == abs(state[i] - state[j]):
+                conflicts += 1
+    return conflicts
 
-def neighbors(state):
-    zero = state.index(0)
-    row, col = divmod(zero, 3)
+def get_best_neighbor(state):
+    best_neighbor = None
+    best_cost = float('inf')
+    n = len(state)
 
-    moves = [
-        (-1, 0),
-        (1, 0),
-        (0, -1),
-        (0, 1)
-    ]
+    for i, j in itertools.combinations(range(n), 2):
+        neighbor = list(state)
+        neighbor[i], neighbor[j] = neighbor[j], neighbor[i]
 
-    for dr, dc in moves:
-        new_row = row + dr
-        new_col = col + dc
+        cost = calculate_cost(neighbor)
 
-        if 0 <= new_row < 3 and 0 <= new_col < 3:
-            new_state = list(state)
-            new_zero = new_row * 3 + new_col
+        if cost < best_cost:
+            best_cost = cost
+            best_neighbor = neighbor
 
-            new_state[zero], new_state[new_zero] = (
-                new_state[new_zero],
-                new_state[zero]
-            )
+    return best_neighbor, best_cost
 
-            yield tuple(new_state)
+def hill_climbing(initial_state):
+    current_state = initial_state
+    current_cost = calculate_cost(current_state)
 
+    print(f"Initial State: {current_state} | Cost: {current_cost}")
 
-def inversions(state):
-    tiles = [x for x in state if x != 0]
-
-    return sum(
-        tiles[i] > tiles[j]
-        for i in range(len(tiles))
-        for j in range(i + 1, len(tiles))
-    )
-
-
-def solvable(state):
-    return (
-        inversions(state) % 2
-        == inversions(GOAL) % 2
-    )
-
-
-def hill_climbing(start):
-    """
-    Steepest-ascent hill climbing.
-    At each step, look at all neighbors and move to the one with the
-    lowest Manhattan distance. Stop when no neighbor is strictly better
-    (goal reached, or stuck at a local minimum / plateau).
-    Returns (path, reached_goal).
-    """
-    current = start
-    path = [current]
-
-    while current != GOAL:
-        current_h = manhattan(current)
-
-        best = min(neighbors(current), key=manhattan)
-        best_h = manhattan(best)
-
-        # No improvement -> local optimum or plateau
-        if best_h >= current_h:
-            return path, False
-
-        current = best
-        path.append(current)
-
-    return path, True
-
-
-def print_board(state):
-    for i in range(0, 9, 3):
-        print(
-            " ".join(
-                str(x) if x != 0 else " "
-                for x in state[i:i + 3]
-            )
-        )
-
-    print("-" * 9)
-
-
-while True:
-    try:
-        state = tuple(
-            map(int, input("Enter 9 numbers: ").split())
-        )
-
-        if len(state) == 9 and sorted(state) == list(range(9)):
+    step = 1
+    while True:
+        if current_cost == 0:
+            print("\nGoal state reached!")
             break
 
-        print("Error: Enter numbers 0 to 8 exactly once.")
+        neighbor_state, neighbor_cost = get_best_neighbor(current_state)
 
-    except ValueError:
-        print("Error: Enter integers only.")
+        if neighbor_cost >= current_cost:
+            print("\nStuck in local maximum/flat local area. Terminating.")
+            break
 
+        print(f"Step {step} -> Moving to neighbor: {neighbor_state} | Cost: {neighbor_cost}")
+        current_state = neighbor_state
+        current_cost = neighbor_cost
+        step += 1
 
-print("\nInitial State:")
-print_board(state)
+    return current_state
 
-print("Target Goal State:")
-print_board(GOAL)
+initial_state = [3, 1, 2, 0]
+final_state = hill_climbing(initial_state)
+print(f"Final Configuration: {final_state}")
+     
+Initial State: [3, 1, 2, 0] | Cost: 2
+Step 1 -> Moving to neighbor: [1, 3, 2, 0] | Cost: 1
+Step 2 -> Moving to neighbor: [1, 3, 0, 2] | Cost: 0
 
-if not solvable(state):
-    print("This puzzle configuration is UNSOLVABLE.")
-
-else:
-    print(
-        "Solvability check passed! Solving using Hill Climbing "
-        "(Manhattan Distance)...\n"
-    )
-
-    solution, reached = hill_climbing(state)
-
-    if reached:
-        print(
-            f"Goal reached in {len(solution) - 1} steps!\n"
-        )
-    else:
-        print(
-            f"Stuck at a local optimum after {len(solution) - 1} steps "
-            f"(h = {manhattan(solution[-1])}). Hill climbing failed.\n"
-        )
-
-    for step, s in enumerate(solution):
-        print(f"Step {step}:")
-        print_board(s)
+Goal state reached!
+Final Configuration: [1, 3, 0, 2]
